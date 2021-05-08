@@ -1,9 +1,12 @@
 const { inject, uninject } = require('powercord/injector');
 const { forceUpdateElement } = require('powercord/util');
+const { Tooltip } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
+   getModuleByDisplayName,
    constants,
    getModule,
+   i18n: { Messages },
    React
 } = require('powercord/webpack');
 
@@ -11,12 +14,15 @@ const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableCha
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
-const Channel = getModule(m => m.prototype?.isManaged, false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
+const Channel = getModule(m => m.prototype?.isManaged, false);
+const Clickable = getModuleByDisplayName('Clickable', false);
 const { getChannels } = getModule(['getChannels'], false);
 const Permissions = getModule(['getHighestRole'], false);
 const { getChannel } = getModule(['getChannel'], false);
+const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
+const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
 const LockIcon = require('./components/Lock');
 
@@ -103,7 +109,11 @@ module.exports = class ShowHiddenChannels extends Plugin {
          if (instance.channel && this.isChannelHidden(instance.channel.id)) {
             let children = res.props?.children?.props?.children[1]?.props?.children[1];
             if (children.props?.children) children.props.children = [
-               <LockIcon />
+               <Tooltip text={Messages.CHANNEL_LOCKED_SHORT}>
+                  <Clickable className={iconItem} style={{ display: 'block' }}>
+                     <LockIcon className={actionIcon} />
+                  </Clickable>
+               </Tooltip>
             ];
 
             if (!(instance.channel?.type == constants.ChannelTypes.GUILD_VOICE && instance.props?.connected)) {
