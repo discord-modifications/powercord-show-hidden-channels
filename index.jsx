@@ -4,7 +4,7 @@ const { Tooltip } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
    getModuleByDisplayName,
-   constants,
+   constants: { ChannelTypes },
    getModule,
    i18n: { Messages },
    React
@@ -24,10 +24,11 @@ const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
+
 const Settings = require('./components/Settings');
 const LockIcon = require('./components/Lock');
 
-const channelTypes = {
+const types = {
    GUILD_TEXT: 'SELECTABLE',
    GUILD_VOICE: 'VOCAL',
    GUILD_ANNOUNCEMENT: 'SELECTABLE',
@@ -36,14 +37,14 @@ const channelTypes = {
 
 module.exports = class ShowHiddenChannels extends Plugin {
    startPlugin() {
+      this.patches = [];
+      this.cache = {};
+
       powercord.api.settings.registerSettings('show-hidden-channels', {
          category: this.entityID,
          label: 'Show Hidden Channels',
          render: Settings
       });
-
-      this.patches = [];
-      this.cache = {};
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
          return res && !this.isChannelHidden(args[0]);
@@ -68,11 +69,12 @@ module.exports = class ShowHiddenChannels extends Plugin {
             props.channels = Object.assign({}, props.channels);
             for (let type in props.channels) props.channels[type] = [].concat(props.channels[type]);
 
-            let hiddenId = props.guild.id + "_hidden";
+            let hiddenId = `${props.guild.id}_hidden`;
 
+            const { GUILD_CATEGORY } = ChannelTypes;
             delete props.categories[hiddenId];
             props.categories._categories = props.categories._categories.filter(n => n.channel.id != hiddenId);
-            props.channels[constants.ChannelTypes.GUILD_CATEGORY] = props.channels[constants.ChannelTypes.GUILD_CATEGORY].filter(n => n.channel.id != hiddenId);
+            props.channels[GUILD_CATEGORY] = props.channels[GUILD_CATEGORY].filter(n => n.channel.id != hiddenId);
 
             let index = -1;
             for (let catId in props.categories) {
@@ -91,7 +93,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   guild_id: props.guild.id,
                   id: hiddenId,
                   name: 'hidden',
-                  type: constants.ChannelTypes.GUILD_CATEGORY
+                  type: GUILD_CATEGORY
                });
 
                props.categories[hiddenId] = [];
@@ -100,37 +102,41 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   index: ++index
                });
 
-               props.channels[constants.ChannelTypes.GUILD_CATEGORY].push({
-                  comparator: (props.channels[constants.ChannelTypes.GUILD_CATEGORY][props.channels[constants.ChannelTypes.GUILD_CATEGORY].length - 1] || { comparator: 0 }).comparator + 1,
+               props.channels[GUILD_CATEGORY].push({
+                  comparator: (props.channels[GUILD_CATEGORY][props.channels[GUILD_CATEGORY].length - 1] || { comparator: 0 }).comparator + 1,
                   channel: hiddenCategory
                });
             }
 
             for (let type in channels) {
-               let channelType = channelTypes[constants.ChannelTypes[type]] || type;
+               let channelType = types[ChannelTypes[type]] || type;
                if (!Array.isArray(props.channels[channelType])) props.channels[channelType] = [];
 
                for (let channel of channels[type]) {
-                  let hiddenChannel = new Channel(Object.assign({}, channel, {
+                  let hidden = new Channel(Object.assign({}, channel, {
                      parent_id: hiddenCategory ? hiddenId : channel.parent_id
                   }));
 
-                  let parent_id = hiddenChannel.parent_id || 'null';
+                  let parent_id = hidden.parent_id || 'null';
 
                   props.categories[parent_id].push({
-                     channel: hiddenChannel,
-                     index: hiddenChannel.position
+                     channel: hidden,
+                     index: hidden.position
                   });
 
                   props.channels[channelType].push({
-                     comparator: hiddenChannel.position,
-                     channel: hiddenChannel
+                     comparator: hidden.position,
+                     channel: hidden
                   });
                }
             }
 
-            for (let parent_id in props.categories) this.sortArray(props.categories[parent_id], 'index');
-            for (let channelType in props.channels) this.sortArray(props.channels[channelType], 'comparator');
+            for (let parent in props.categories) {
+               this.sortArray(props.categories[parent], 'index');
+            }
+            for (let channelType in props.channels) {
+               this.sortArray(props.channels[channelType], 'comparator');
+            }
          }
 
          return res;
@@ -150,7 +156,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
                </Tooltip>
             ];
 
-            if (!(instance.channel?.type == constants.ChannelTypes.GUILD_VOICE && instance.props?.connected)) {
+            if (!(instance.channel?.type == ChannelTypes.GUILD_VOICE && instance.props?.connected)) {
                let wrapper = res.props.children;
                if (wrapper) {
                   wrapper.props.onMouseDown = () => { };
@@ -178,9 +184,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.forceUpdateAll();
    }
 
-   sortArray(array, key, except) {
-      if (key == null) return array;
-      if (except === undefined) except = null;
+   sortArray(array, key, except = null) {
       return array.sort((x, y) => {
          let xValue = x[key], yValue = y[key];
          if (xValue !== except) return xValue < yValue ? -1 : xValue > yValue ? 1 : 0;
@@ -201,9 +205,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
       ) {
          let all = getMutableGuildChannels(guild.id);
 
-         for (let type in constants.ChannelTypes) {
-            if (!Number.isNaN(Number(constants.ChannelTypes[type]))) {
-               channels[constants.ChannelTypes[type]] = [];
+         for (let type in ChannelTypes) {
+            if (!Number.isNaN(Number(ChannelTypes[type]))) {
+               channels[ChannelTypes[type]] = [];
             }
          }
 
@@ -211,25 +215,23 @@ module.exports = class ShowHiddenChannels extends Plugin {
             let channel = all[id];
             if (
                channel.guild_id == guild.id &&
-               channel.type != constants.ChannelTypes.GUILD_CATEGORY &&
-               channel.type != constants.ChannelTypes.DM &&
+               channel.type != ChannelTypes.GUILD_CATEGORY &&
+               channel.type != ChannelTypes.DM &&
                !Permissions.can(DiscordPermissions.VIEW_CHANNEL, channel)
             ) channels[channel.type].push(channel);
          }
-      } else {
-         channels = this.cache[guild.id].hidden;
-      }
 
-      for (let type in channels) {
-         channels[type] = channels[type].filter(c => getChannel(c.id));
-      }
+         for (let type in channels) {
+            channels[type] = channels[type].filter(c => getChannel(c.id));
+         }
 
-      this.cache[guild.id] = {
-         hidden: channels,
-         amount: Object.entries(channels).map(m => m[1]).flat().length,
-         visible,
-         roles
-      };
+         this.cache[guild.id] = {
+            hidden: channels,
+            amount: Object.entries(channels).map(m => m[1]).flat().length,
+            visible,
+            roles
+         };
+      }
 
       return [this.cache[guild.id].hidden, this.cache[guild.id].amount];
    }
