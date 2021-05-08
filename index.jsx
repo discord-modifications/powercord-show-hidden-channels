@@ -24,6 +24,7 @@ const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
+const Settings = require('./components/Settings');
 const LockIcon = require('./components/Lock');
 
 const channelTypes = {
@@ -35,6 +36,12 @@ const channelTypes = {
 
 module.exports = class ShowHiddenChannels extends Plugin {
    startPlugin() {
+      powercord.api.settings.registerSettings('show-hidden-channels', {
+         category: this.entityID,
+         label: 'Show Hidden Channels',
+         render: Settings
+      });
+
       this.patches = [];
       this.cache = {};
 
@@ -61,6 +68,12 @@ module.exports = class ShowHiddenChannels extends Plugin {
             props.channels = Object.assign({}, props.channels);
             for (let type in props.channels) props.channels[type] = [].concat(props.channels[type]);
 
+            let hiddenId = props.guild.id + "_hidden";
+
+            delete props.categories[hiddenId];
+            props.categories._categories = props.categories._categories.filter(n => n.channel.id != hiddenId);
+            props.channels[constants.ChannelTypes.GUILD_CATEGORY] = props.channels[constants.ChannelTypes.GUILD_CATEGORY].filter(n => n.channel.id != hiddenId);
+
             let index = -1;
             for (let catId in props.categories) {
                if (catId != '_categories') {
@@ -72,13 +85,34 @@ module.exports = class ShowHiddenChannels extends Plugin {
                }
             }
 
+            let hiddenCategory = null;
+            if (!this.settings.get('sortNative', true)) {
+               hiddenCategory = new Channel({
+                  guild_id: props.guild.id,
+                  id: hiddenId,
+                  name: 'hidden',
+                  type: constants.ChannelTypes.GUILD_CATEGORY
+               });
+
+               props.categories[hiddenId] = [];
+               props.categories._categories.push({
+                  channel: hiddenCategory,
+                  index: ++index
+               });
+
+               props.channels[constants.ChannelTypes.GUILD_CATEGORY].push({
+                  comparator: (props.channels[constants.ChannelTypes.GUILD_CATEGORY][props.channels[constants.ChannelTypes.GUILD_CATEGORY].length - 1] || { comparator: 0 }).comparator + 1,
+                  channel: hiddenCategory
+               });
+            }
+
             for (let type in channels) {
                let channelType = channelTypes[constants.ChannelTypes[type]] || type;
                if (!Array.isArray(props.channels[channelType])) props.channels[channelType] = [];
 
                for (let channel of channels[type]) {
                   let hiddenChannel = new Channel(Object.assign({}, channel, {
-                     parent_id: channel.parent_id
+                     parent_id: hiddenCategory ? hiddenId : channel.parent_id
                   }));
 
                   let parent_id = hiddenChannel.parent_id || 'null';
@@ -139,6 +173,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
    }
 
    pluginWillUnload() {
+      powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
       this.forceUpdateAll();
    }
