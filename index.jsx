@@ -64,10 +64,14 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          if (amount) {
             props.categories = Object.assign({}, props.categories);
-            for (let cat in props.categories) props.categories[cat] = [].concat(props.categories[cat]);
+            for (let cat in props.categories) {
+               props.categories[cat] = [].concat(props.categories[cat]);
+            }
 
             props.channels = Object.assign({}, props.channels);
-            for (let type in props.channels) props.channels[type] = [].concat(props.channels[type]);
+            for (let type in props.channels) {
+               props.channels[type] = [].concat(props.channels[type]);
+            }
 
             let hiddenId = `${props.guild.id}_hidden`;
 
@@ -79,7 +83,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
             let index = -1;
             for (let catId in props.categories) {
                if (catId != '_categories') {
-                  props.categories[catId] = props.categories[catId].filter(n => !this.isChannelHidden(n.channel.id));
+                  let cat = props.categories[catId];
+                  cat = cat.filter(n => !this.isChannelHidden(n.channel.id));
                }
 
                for (let channelObj of props.categories[catId]) {
@@ -102,8 +107,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   index: ++index
                });
 
-               props.channels[GUILD_CATEGORY].push({
-                  comparator: (props.channels[GUILD_CATEGORY][props.channels[GUILD_CATEGORY].length - 1] || { comparator: 0 }).comparator + 1,
+               const categories = props.channels[GUILD_CATEGORY];
+               categories.push({
+                  comparator: (categories[categories.length - 1] || { comparator: 0 }).comparator + 1,
                   channel: hiddenCategory
                });
             }
