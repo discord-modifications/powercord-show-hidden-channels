@@ -157,7 +157,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
             ];
 
             if (!(instance.channel?.type == ChannelTypes.GUILD_VOICE && instance.props?.connected)) {
-               let wrapper = res.props.children;
+               let wrapper = res.props?.children;
                if (wrapper) {
                   wrapper.props.onMouseDown = () => { };
                   wrapper.props.onMouseUp = () => { };
@@ -238,10 +238,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
    isChannelHidden(channelId) {
       let channel = getChannel(channelId);
-      return channel &&
-         this.cache[channel.guild_id] &&
-         this.cache[channel.guild_id].hidden[channel.type] &&
-         this.cache[channel.guild_id].hidden[channel.type].find(c => c.id == channel.id);
+      return channel && this.cache[channel.guild_id]?.hidden[channel.type]?.find(c => c.id == channel.id);
    }
 
    forceUpdateAll() {
