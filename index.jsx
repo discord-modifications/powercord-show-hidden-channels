@@ -1,5 +1,5 @@
 const { inject, uninject } = require('powercord/injector');
-const { forceUpdateElement } = require('powercord/util');
+const { getOwnerInstance } = require('powercord/util');
 const { Tooltip } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
@@ -11,6 +11,7 @@ const {
 } = require('powercord/webpack');
 
 const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
+const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
@@ -169,7 +170,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   wrapper.props.onMouseUp = () => { };
                }
 
-               let mainContent = res.props?.children?.props?.children[1]?.props?.children[0];
+               let mainContent = res.props?.children?.props?.children?.[1]?.props?.children[0];
                if (mainContent) {
                   mainContent.props.onClick = () => { };
                   mainContent.props.href = null;
@@ -248,7 +249,11 @@ module.exports = class ShowHiddenChannels extends Plugin {
    }
 
    forceUpdateAll() {
-      forceUpdateElement('div[id="channels"]');
+      let channels = document.querySelector(`.${container}`);
+      if (channels) {
+         let instance = getOwnerInstance(channels);
+         instance?.forceUpdate();
+      };
    }
 
    patch(...args) {
