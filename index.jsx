@@ -46,7 +46,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
       powercord.api.settings.registerSettings('show-hidden-channels', {
          category: this.entityID,
          label: 'Show Hidden Channels',
-         render: Settings
+         render: (props) => (() => {
+            return new Settings(Object.assign(props, { forceUpdateAll: this.forceUpdateAll }));
+         })()
       });
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
@@ -286,6 +288,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
    }
 
    forceUpdateAll() {
+      this.cache = {};
       let channels = document.querySelector(`.${container}`);
       if (channels) {
          let instance = getOwnerInstance(channels);
