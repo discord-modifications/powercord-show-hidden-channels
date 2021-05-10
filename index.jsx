@@ -205,7 +205,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
          let menuItems = findInReactTree(res, c => Array.isArray(c) && c.find?.(a => a?.props?.id == 'hide-muted-channels'));
          let index = menuItems?.indexOf(menuItems.find(c => c?.props?.id == 'hide-muted-channels'));
 
-
          if (index > -1) {
             menuItems.splice(index + 1, 0, React.createElement(Menu.MenuCheckboxItem, {
                id: 'hide-locked-channels',
