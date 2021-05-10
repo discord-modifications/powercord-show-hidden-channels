@@ -1,5 +1,5 @@
 const { inject, uninject } = require('powercord/injector');
-const { getOwnerInstance } = require('powercord/util');
+const { findInReactTree, getOwnerInstance } = require('powercord/util');
 const { Tooltip } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
@@ -11,9 +11,10 @@ const {
 } = require('powercord/webpack');
 
 const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
-const { container } = getModule(['container', 'subscribeTooltipButton'], false);
+const GuildContextMenu = getModule(m => m.default?.displayName === 'GuildContextMenu', false);
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
+const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
@@ -25,6 +26,7 @@ const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
+const Menu = getModule(['MenuItem'], false);
 
 const Settings = require('./components/Settings');
 const LockIcon = require('./components/Lock');
@@ -60,6 +62,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
          if (!props) return res;
 
          let { guild } = props;
+         if (this.settings.get('blacklistedGuilds', []).includes(guild.id)) return res;
          let [channels, amount] = this.getHiddenChannels(guild);
 
 
@@ -148,7 +151,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
-
       NavigableChannels.default.displayName = 'NavigableChannels';
 
       this.patch('shc-channel-item', ChannelItem, 'default', (args, res) => {
@@ -179,8 +181,13 @@ module.exports = class ShowHiddenChannels extends Plugin {
          }
          return res;
       });
-
       ChannelItem.default.displayName = 'ChannelItem';
+
+      this.patch('shc-context-menu', GuildContextMenu, 'default', ([{ guild }], res) => {
+         this.processContextMenu(res, guild);
+         return res;
+      });
+      GuildContextMenu.default.displayName = 'GuildContextMenu';
 
       this.forceUpdateAll();
    }
@@ -189,6 +196,37 @@ module.exports = class ShowHiddenChannels extends Plugin {
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
       this.forceUpdateAll();
+   }
+
+   processContextMenu(res, guild) {
+      let settings = this.settings.get('blacklistedGuilds', []);
+      let [checked, setChecked] = React.useState(settings.includes(guild.id));
+      if (!findInReactTree(res, c => c.props?.id == 'hide-locked-channels')) {
+         let menuItems = findInReactTree(res, c => Array.isArray(c) && c.find?.(a => a?.props?.id == 'hide-muted-channels'));
+         let index = menuItems?.indexOf(menuItems.find(c => c?.props?.id == 'hide-muted-channels'));
+
+
+         if (index > -1) {
+            menuItems.splice(index + 1, 0, React.createElement(Menu.MenuCheckboxItem, {
+               id: 'hide-locked-channels',
+               label: 'Hide Locked Channels',
+               checked: checked,
+               action: () => {
+                  setChecked(!checked);
+                  if (!checked && !settings.includes(guild.id)) {
+                     settings.push(guild.id);
+                     this.settings.set('blacklistedGuilds', settings);
+                  } else if (checked) {
+                     let index = settings.findIndex(g => g == guild.id);
+                     if (index > -1) this.settings.set('blacklistedGuilds', settings.splice(index, 0));
+                  };
+                  this.forceUpdateAll();
+               },
+            }));
+         }
+      }
+
+      return res;
    }
 
    sortArray(array, key, except = null) {
