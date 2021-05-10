@@ -46,9 +46,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       powercord.api.settings.registerSettings('show-hidden-channels', {
          category: this.entityID,
          label: 'Show Hidden Channels',
-         render: (props) => (() => {
-            return new Settings(Object.assign(props, { forceUpdateAll: this.forceUpdateAll }));
-         })()
+         render: (props) => <Settings {...Object.assign(props, { update: this.forceUpdateAll })} />
       });
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {

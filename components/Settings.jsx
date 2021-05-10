@@ -16,7 +16,7 @@ module.exports = class Settings extends React.Component {
                value={getSetting('sortNative', true)}
                onChange={() => {
                   toggleSetting('sortNative');
-                  this.props.forceUpdateAll();
+                  this.props.update();
                }}
             >
                Native Order
