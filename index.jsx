@@ -95,12 +95,16 @@ module.exports = class ShowHiddenChannels extends Plugin {
       }, true);
 
       this.patch('shc-category-expand', CategoryUtil, 'categoryExpand', (args, res) => {
-         if (args[0]?.endsWith('hidden')) {
+         if (args[0] && args[0].endsWith('hidden')) {
             if (!this.collapsed.includes(args[0])) {
                this.collapsed.push(args[0]);
                this.settings.set('collapsed', this.collapsed);
+            } else {
+               this.collapsed = this.collapsed.filter(c => c !== args[0]);
+               this.settings.set('collapsed', this.collapsed);
             }
          }
+
          return args;
       }, true);
 
@@ -229,12 +233,14 @@ module.exports = class ShowHiddenChannels extends Plugin {
                }
             }
          }
+
          return res;
       });
       ChannelItem.default.displayName = 'ChannelItem';
 
       this.patch('shc-context-menu', GuildContextMenu, 'default', ([{ guild }], res) => {
          this.processContextMenu(res, guild);
+
          return res;
       });
       GuildContextMenu.default.displayName = 'GuildContextMenu';
