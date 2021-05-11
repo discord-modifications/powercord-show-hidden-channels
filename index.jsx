@@ -166,6 +166,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.patch('shc-channel-item', ChannelItem, 'default', (args, res) => {
          let instance = args[0];
          if (instance.channel && this.isChannelHidden(instance.channel.id)) {
+            let item = res.props?.children?.props;
+            if (item?.className) item.className += ` shc-hidden-channel shc-hidden-channel-type-${instance.channel.type}`;
+
             let children = res.props?.children?.props?.children[1]?.props?.children[1];
             if (children.props?.children) children.props.children = [
                <Tooltip text={Messages.CHANNEL_LOCKED_SHORT}>
