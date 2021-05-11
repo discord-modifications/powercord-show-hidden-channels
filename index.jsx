@@ -219,22 +219,24 @@ module.exports = class ShowHiddenChannels extends Plugin {
          let index = menuItems?.indexOf(menuItems.find(c => c?.props?.id == 'hide-muted-channels'));
 
          if (index > -1) {
-            menuItems.splice(index + 1, 0, React.createElement(Menu.MenuCheckboxItem, {
-               id: 'hide-locked-channels',
-               label: 'Hide Locked Channels',
-               checked: checked,
-               action: () => {
-                  setChecked(!checked);
-                  if (!checked && !settings.includes(guild.id)) {
-                     settings.push(guild.id);
-                     this.settings.set('blacklistedGuilds', settings);
-                  } else if (checked) {
-                     let index = settings.findIndex(g => g == guild.id);
-                     if (index > -1) this.settings.set('blacklistedGuilds', settings.splice(index, 0));
-                  };
-                  this.forceUpdateAll();
-               },
-            }));
+            menuItems.splice(index + 1, 0,
+               <Menu.MenuCheckboxItem
+                  id='hide-locked-channels'
+                  label='Hide Locked Channels'
+                  checked={checked}
+                  action={() => {
+                     setChecked(!checked);
+                     if (!checked && !settings.includes(guild.id)) {
+                        settings.push(guild.id);
+                        this.settings.set('blacklistedGuilds', settings);
+                     } else if (checked) {
+                        let index = settings.findIndex(g => g == guild.id);
+                        if (index > -1) this.settings.set('blacklistedGuilds', settings.splice(index, 0));
+                     };
+                     this.forceUpdateAll();
+                  }}
+               />
+            );
          }
       }
 
