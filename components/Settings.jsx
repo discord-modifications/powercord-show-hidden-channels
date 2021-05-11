@@ -37,6 +37,17 @@ module.exports = class Settings extends React.Component {
             >
                Native Order
             </SwitchItem>
+            <SwitchItem
+               note={'Collapse hidden category after switching servers (requires native order to be off)'}
+               value={getSetting('alwaysCollapse', false)}
+               disabled={getSetting('sortNative', true)}
+               onChange={() => {
+                  toggleSetting('alwaysCollapse');
+                  this.props.update();
+               }}
+            >
+               Collapse Hidden Category
+            </SwitchItem>
             <Category
                name={'Channels'}
                description={'Toggle the type of channels that will render'}

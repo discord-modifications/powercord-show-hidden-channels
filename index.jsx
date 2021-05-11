@@ -19,8 +19,10 @@ const DiscordPermissions = getModule(['Permissions'], false).Permissions;
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
+const CategoryUtil = getModule(['categoryCollapse'], false);
 const { getChannels } = getModule(['getChannels'], false);
 const Permissions = getModule(['getHighestRole'], false);
+const CategoryStore = getModule(['isCollapsed'], false);
 const { getChannel } = getModule(['getChannel'], false);
 const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
@@ -50,6 +52,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
    startPlugin() {
       this.patches = [];
       this.cache = {};
+      this.collapsed = [];
+      this.lastGuild = null;
 
       this.loadStylesheet('style.css');
 
@@ -66,6 +70,39 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.patch('shc-mention-count', UnreadStore, 'getMentionCount', (args, res) => {
          return this.isChannelHidden(args[0]) ? 0 : res;
       });
+
+      this.patch('shc-is-collapsed', CategoryStore, 'isCollapsed', (args, res) => {
+         if (args[0]?.endsWith('hidden')) {
+            if (this.settings.get('alwaysCollapse', false) && args[0] != this.lastGuild && !this.collapsed.includes(args[0])) {
+               this.collapsed.push(args[0]);
+               this.settings.set('collapsed', this.collapsed);
+            }
+            this.lastGuild = args[0];
+            return this.collapsed.includes(args[0]);
+         }
+         return res;
+      });
+
+      this.patch('shc-category-collapse', CategoryUtil, 'categoryCollapse', (args, res) => {
+         if (args[0]?.endsWith('hidden')) {
+            if (!this.collapsed.includes(args[0])) {
+               this.collapsed.push(args[0]);
+               this.settings.set('collapsed', this.collapsed);
+            }
+         }
+
+         return args;
+      }, true);
+
+      this.patch('shc-category-expand', CategoryUtil, 'categoryExpand', (args, res) => {
+         if (args[0]?.endsWith('hidden')) {
+            if (!this.collapsed.includes(args[0])) {
+               this.collapsed.push(args[0]);
+               this.settings.set('collapsed', this.collapsed);
+            }
+         }
+         return args;
+      }, true);
 
       this.patch('shc-navigable-channels', NavigableChannels, 'default', (args, res) => {
          let props = res.props?.children?.props;
