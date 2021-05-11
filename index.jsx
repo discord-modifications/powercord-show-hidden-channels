@@ -38,15 +38,25 @@ const types = {
    GUILD_STORE: 'SELECTABLE',
 };
 
+const defaults = {
+   GUILD_TEXT: true,
+   GUILD_VOICE: true,
+   GUILD_ANNOUNCEMENT: true,
+   GUILD_STORE: true,
+   GUILD_STAGE_VOICE: true
+};
+
 module.exports = class ShowHiddenChannels extends Plugin {
    startPlugin() {
       this.patches = [];
       this.cache = {};
 
+      this.loadStylesheet('style.css');
+
       powercord.api.settings.registerSettings('show-hidden-channels', {
          category: this.entityID,
          label: 'Show Hidden Channels',
-         render: (props) => <Settings {...Object.assign(props, { update: this.forceUpdateAll })} />
+         render: (props) => <Settings {...Object.assign(props, { update: this.forceUpdateAll.bind(this) })} />
       });
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
@@ -247,7 +257,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
          this.cache[guild.id].visible != visible ||
          this.cache[guild.id].roles != roles
       ) {
-         let all = getMutableGuildChannels(guild.id);
+         let all = getMutableGuildChannels();
 
          for (let type in ChannelTypes) {
             if (!Number.isNaN(Number(ChannelTypes[type]))) {
@@ -261,7 +271,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
                channel.guild_id == guild.id &&
                channel.type != ChannelTypes.GUILD_CATEGORY &&
                channel.type != ChannelTypes.DM &&
-               !Permissions.can(DiscordPermissions.VIEW_CHANNEL, channel)
+               !Permissions.can(DiscordPermissions.VIEW_CHANNEL, channel) &&
+               this.settings.get('channels', defaults)[ChannelTypes[channel.type]]
             ) channels[channel.type].push(channel);
          }
 

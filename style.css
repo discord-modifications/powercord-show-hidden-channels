@@ -1,0 +1,41 @@
+.shc-guild-settings {
+   width: auto !important;
+   margin-bottom: 32px;
+}
+
+.shc-guild-item.selectableItem-1MP3MQ.selected-31soGA {
+   cursor: pointer !important;
+}
+
+.shc-guild-scroller {
+   max-height: 500px;
+}
+
+.shc-guild-item {
+   padding: 6px;
+   padding-left: 18px;
+   margin-top: 4px;
+   margin-bottom: 4px;
+   height: auto;
+}
+
+.shc-guild {
+   margin: 6px;
+   width: 32px;
+   height: 32px;
+   float: left;
+   border-radius: 360px;
+}
+
+.shc-guild-name {
+   color: white;
+   float: left;
+   font-family: 'Whitney', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+   font-weight: 700;
+   margin-left: 8px;
+   font-size: 20px;
+}
+
+.shc-guild-name {
+   margin-top: 8px;
+}
