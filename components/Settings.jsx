@@ -39,7 +39,7 @@ module.exports = class Settings extends React.Component {
             </SwitchItem>
             <Category
                name={'Channels'}
-               description={'Toggle type of channels that will render'}
+               description={'Toggle the type of channels that will render'}
                opened={this.state.channelsCategory}
                onChange={() => this.setState({ channelsCategory: !this.state.channelsCategory })}
             >
