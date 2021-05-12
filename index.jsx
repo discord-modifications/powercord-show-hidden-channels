@@ -250,7 +250,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       this.forceUpdateAll();
 
-      await waitFor('.messagesWrapper-1sRNjr');
+      await waitFor(`.${messagesWrapper}`);
       if (this.isChannelHidden(getChannelId())) {
          FluxDispatcher.dispatch({
             type: 'CHANNEL_SELECT',
@@ -277,7 +277,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
       }
    }
 
-   displayChannelNotice() {
+   async displayChannelNotice() {
+      await waitFor(`.${messagesWrapper}`);
       const wrapper = document.querySelector(`.${messagesWrapper}`);
       if (!wrapper || wrapper.firstChild.style.display == 'none') return;
 
