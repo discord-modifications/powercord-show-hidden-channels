@@ -265,9 +265,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       wrapper.parentElement.children[1].style.display = 'none';
       wrapper.parentElement.parentElement.children[1].style.display = 'none';
 
-      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
-      errorBar.style.display = 'none';
-
       wrapper.parentElement.parentElement.children[1].style.display = 'none';
 
       const toolbar = document.querySelector(`.${Toolbar}`);
@@ -289,6 +286,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
       `;
 
       wrapper.appendChild(notification);
+
+      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
+      if (errorBar) errorBar.style.display = 'none';
    }
 
    processContextMenu(res, guild) {
