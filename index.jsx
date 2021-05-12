@@ -251,7 +251,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.forceUpdateAll();
 
       await waitFor('.messagesWrapper-1sRNjr');
-      console.log(getChannelId());
       if (this.isChannelHidden(getChannelId())) {
          FluxDispatcher.dispatch({
             type: 'CHANNEL_SELECT',
