@@ -1,5 +1,5 @@
 const { inject, uninject } = require('powercord/injector');
-const { findInReactTree, getOwnerInstance } = require('powercord/util');
+const { findInReactTree, getOwnerInstance, waitFor } = require('powercord/util');
 const { Tooltip } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
@@ -18,6 +18,8 @@ const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const { toolbar: Toolbar } = getModule(m => m?.toolbar && m?.selected, false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const { getChannelId } = getModule(['getLastSelectedChannelId'], false);
+const { getGuildId } = getModule(['getLastSelectedGuildId'], false);
 const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
 const { messagesWrapper } = getModule(['messagesWrapper'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
@@ -56,7 +58,7 @@ const defaults = {
 };
 
 module.exports = class ShowHiddenChannels extends Plugin {
-   startPlugin() {
+   async startPlugin() {
       this.patches = [];
       this.cache = {};
       this.collapsed = [];
@@ -247,6 +249,17 @@ module.exports = class ShowHiddenChannels extends Plugin {
       FluxDispatcher.subscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
 
       this.forceUpdateAll();
+
+      await waitFor('.messagesWrapper-1sRNjr');
+      console.log(getChannelId());
+      if (this.isChannelHidden(getChannelId())) {
+         FluxDispatcher.dispatch({
+            type: 'CHANNEL_SELECT',
+            channelId: getChannelId(),
+            guildId: getGuildId(),
+            messageId: null
+         });
+      }
    }
 
    pluginWillUnload() {
@@ -267,13 +280,19 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
    displayChannelNotice() {
       const wrapper = document.querySelector(`.${messagesWrapper}`);
-      if (!wrapper) return;
+      if (!wrapper || wrapper.firstChild.style.display == 'none') return;
 
-      wrapper.firstChild.style.display = 'none';
-      wrapper.parentElement.children[1].style.display = 'none';
-      wrapper.parentElement.parentElement.children[1].style.display = 'none';
+      if (wrapper.firstChild) {
+         wrapper.firstChild.style.display = 'none';
+      }
 
-      wrapper.parentElement.parentElement.children[1].style.display = 'none';
+      if (wrapper.parentElement?.children[1]) {
+         wrapper.parentElement.children[1].style.display = 'none';
+      }
+
+      if (wrapper.parentElement?.parentElement?.children[1]) {
+         wrapper.parentElement.parentElement.children[1].style.display = 'none';
+      }
 
       const toolbar = document.querySelector(`.${Toolbar}`);
 
