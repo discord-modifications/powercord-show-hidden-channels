@@ -18,6 +18,7 @@ const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const { toolbar: Toolbar } = getModule(m => m?.toolbar && m?.selected, false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
 const { messagesWrapper } = getModule(['messagesWrapper'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
@@ -293,6 +294,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
       `;
 
       wrapper.appendChild(notification);
+
+      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
+      if (errorBar) errorBar.style.display = 'none';
    }
 
    processContextMenu(res, guild) {
