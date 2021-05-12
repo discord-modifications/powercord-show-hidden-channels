@@ -19,7 +19,6 @@ const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const { toolbar: Toolbar } = getModule(m => m?.toolbar && m?.selected, false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
 const { messagesWrapper } = getModule(['messagesWrapper'], false);
-const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
@@ -30,6 +29,7 @@ const CategoryStore = getModule(['isCollapsed'], false);
 const { getChannel } = getModule(['getChannel'], false);
 const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
+const FetchUtil = getModule(['fetchMessages'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
 const Menu = getModule(['MenuItem'], false);
@@ -76,6 +76,12 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.patch('shc-mention-count', UnreadStore, 'getMentionCount', (args, res) => {
          return this.isChannelHidden(args[0]) ? 0 : res;
       });
+
+      FetchUtil._fetchMessages = FetchUtil.fetchMessages;
+      FetchUtil.fetchMessages = ((args) => {
+         if (this.isChannelHidden(args.channelId)) return;
+         return FetchUtil._fetchMessages(args);
+      }).bind(this);
 
       this.patch('shc-is-collapsed', CategoryStore, 'isCollapsed', (args, res) => {
          if (args[0]?.endsWith('hidden')) {
@@ -243,6 +249,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
    }
 
    pluginWillUnload() {
+      FetchUtil.fetchMessages = FetchUtil._fetchMessages;
       FluxDispatcher.unsubscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
@@ -286,9 +293,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       `;
 
       wrapper.appendChild(notification);
-
-      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
-      if (errorBar) errorBar.style.display = 'none';
    }
 
    processContextMenu(res, guild) {
