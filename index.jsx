@@ -16,9 +16,9 @@ const GuildContextMenu = getModule(m => m.default?.displayName === 'GuildContext
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
-const { toolbar: Toolbar } = getModule(m => m?.toolbar && m?.selected, false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
 const { getChannelId } = getModule(['getLastSelectedChannelId'], false);
+const { toolbar: Toolbar } = getModule(['toolbar', 'selected'], false);
 const { getGuildId } = getModule(['getLastSelectedGuildId'], false);
 const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
 const { messagesWrapper } = getModule(['messagesWrapper'], false);
