@@ -279,7 +279,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       notification.className = Flex.flexCenter;
       notification.style.width = '100%';
       notification.style.textAlign = 'center';
-      notification.style.zIndex = '500';
 
       notification.innerHTML = `
         <div class="${Flex.flex} ${Flex.directionColumn} ${Flex.alignCenter}">
