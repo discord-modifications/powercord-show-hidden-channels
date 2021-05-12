@@ -7,7 +7,8 @@ const {
    constants: { ChannelTypes },
    getModule,
    i18n: { Messages },
-   React
+   React,
+   FluxDispatcher
 } = require('powercord/webpack');
 
 const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
@@ -15,7 +16,10 @@ const GuildContextMenu = getModule(m => m.default?.displayName === 'GuildContext
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
+const { toolbar: Toolbar } = getModule(m => m?.toolbar && m?.selected, false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const { messagesWrapper } = getModule(['messagesWrapper'], false);
+const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
@@ -29,6 +33,8 @@ const { getMember } = getModule(['getMember'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
 const Menu = getModule(['MenuItem'], false);
+const Text = getModule(['h5'], false);
+const Flex = getModule(['flex'], false);
 
 const Settings = require('./components/Settings');
 const LockIcon = require('./components/Lock');
@@ -218,20 +224,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   </Clickable>
                </Tooltip>
             ];
-
-            if (!(instance.channel?.type == ChannelTypes.GUILD_VOICE && instance.props?.connected)) {
-               let wrapper = res.props?.children;
-               if (wrapper) {
-                  wrapper.props.onMouseDown = () => { };
-                  wrapper.props.onMouseUp = () => { };
-               }
-
-               let mainContent = res.props?.children?.props?.children?.[1]?.props?.children[0];
-               if (mainContent) {
-                  mainContent.props.onClick = () => { };
-                  mainContent.props.href = null;
-               }
-            }
          }
 
          return res;
@@ -245,13 +237,57 @@ module.exports = class ShowHiddenChannels extends Plugin {
       });
       GuildContextMenu.default.displayName = 'GuildContextMenu';
 
+      FluxDispatcher.subscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
+
       this.forceUpdateAll();
    }
 
    pluginWillUnload() {
+      FluxDispatcher.unsubscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
       this.forceUpdateAll();
+   }
+
+   channelSelect(data) {
+      if (data.type != 'CHANNEL_SELECT') return;
+
+      if (this.isChannelHidden(data.channelId)) {
+         setTimeout(this.displayChannelNotice);
+      }
+   }
+
+   displayChannelNotice() {
+      const wrapper = document.querySelector(`.${messagesWrapper}`);
+      if (!wrapper) return;
+
+      wrapper.firstChild.style.display = 'none';
+      wrapper.parentElement.children[1].style.display = 'none';
+      wrapper.parentElement.parentElement.children[1].style.display = 'none';
+
+      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
+      errorBar.style.display = 'none';
+
+      wrapper.parentElement.parentElement.children[1].style.display = 'none';
+
+      const toolbar = document.querySelector(`.${Toolbar}`);
+
+      toolbar.style.display = 'none';
+
+      const notification = document.createElement('div');
+
+      notification.className = Flex.flexCenter;
+      notification.style.width = '100%';
+      notification.style.textAlign = 'center';
+      notification.style.zIndex = '500';
+
+      notification.innerHTML = `
+        <div class="${Flex.flex} ${Flex.directionColumn} ${Flex.alignCenter}">
+        <h2 class="${Text.h2} ${Text.defaultColor}">This is a hidden channel.</h2>
+        <h5 class="${Text.h5} ${Text.defaultColor}">You cannot see the contents of this channel. However, you may see its name and topic.</h5>
+        </div>`;
+
+      wrapper.appendChild(notification);
    }
 
    processContextMenu(res, guild) {
