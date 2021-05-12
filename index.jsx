@@ -283,9 +283,11 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       notification.innerHTML = `
         <div class="${Flex.flex} ${Flex.directionColumn} ${Flex.alignCenter}">
-        <h2 class="${Text.h2} ${Text.defaultColor}">This is a hidden channel.</h2>
-        <h5 class="${Text.h5} ${Text.defaultColor}">You cannot see the contents of this channel. However, you may see its name and topic.</h5>
-        </div>`;
+         <img style="max-height: 128px;" src="/assets/755d4654e19c105c3cd108610b78d01c.svg"></img><br /><br />
+         <h2 class="${Text.h2} ${Text.defaultColor}">This is a hidden channel.</h2>
+         <h5 class="${Text.h5} ${Text.defaultColor}">You cannot see the contents of this channel. However, you may see its name and topic.</h5>
+        </div>
+      `;
 
       wrapper.appendChild(notification);
    }
