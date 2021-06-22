@@ -7,20 +7,20 @@ const {
    constants: { ChannelTypes },
    getModule,
    i18n: { Messages },
-   React,
-   FluxDispatcher
+   React
 } = require('powercord/webpack');
 
 const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
 const GuildContextMenu = getModule(m => m.default?.displayName === 'GuildContextMenu', false);
+const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', false);
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
 const { getChannelId } = getModule(['getLastSelectedChannelId'], false);
 const { toolbar: Toolbar } = getModule(['toolbar', 'selected'], false);
-const { getGuildId } = getModule(['getLastSelectedGuildId'], false);
 const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
+const userClasses = getModule(['avatar', 'usernameContainer'], false);
 const { messagesWrapper } = getModule(['messagesWrapper'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
@@ -79,6 +79,14 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.patch('shc-mention-count', UnreadStore, 'getMentionCount', (args, res) => {
          return this.isChannelHidden(args[0]) ? 0 : res;
       });
+
+      this.patch('shc-router', Route, 'default', (args, res) => {
+         let id = res.props?.computedMatch?.params?.channelId;
+         if (id && this.isChannelHidden(id)) this.displayChannelNotice();
+
+         return res;
+      });
+      Route.default.displayName = 'RouteWithImpression';
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
       FetchUtil.fetchMessages = ((args) => {
@@ -246,35 +254,19 @@ module.exports = class ShowHiddenChannels extends Plugin {
       });
       GuildContextMenu.default.displayName = 'GuildContextMenu';
 
-      FluxDispatcher.subscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
-
       this.forceUpdateAll();
 
-      await waitFor(`.${messagesWrapper}`);
+      await waitFor(`.${userClasses.container}`);
       if (this.isChannelHidden(getChannelId())) {
-         FluxDispatcher.dispatch({
-            type: 'CHANNEL_SELECT',
-            channelId: getChannelId(),
-            guildId: getGuildId(),
-            messageId: null
-         });
+         setTimeout(this.displayChannelNotice);
       }
    }
 
    pluginWillUnload() {
       FetchUtil.fetchMessages = FetchUtil._fetchMessages;
-      FluxDispatcher.unsubscribe('CHANNEL_SELECT', this.channelSelect.bind(this));
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
       this.forceUpdateAll();
-   }
-
-   channelSelect(data) {
-      if (data.type != 'CHANNEL_SELECT') return;
-
-      if (this.isChannelHidden(data.channelId)) {
-         setTimeout(this.displayChannelNotice);
-      }
    }
 
    async displayChannelNotice() {
