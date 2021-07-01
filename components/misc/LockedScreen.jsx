@@ -22,7 +22,7 @@ module.exports = React.memo((props) => {
             color={Text.Colors.HEADER_SECONDARY}
             size={Text.Sizes.SIZE_16}
          >
-            You cannot see the contents of this channel.
+            You cannot see the contents of this channel. {props.channel.topic ? 'However, you may see its topic.' : ''} 
          </Text>
          {props.channel.topic ? (<>
             <ChannelTopic
