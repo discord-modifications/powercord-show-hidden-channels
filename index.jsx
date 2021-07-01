@@ -28,6 +28,7 @@ const { getChannel } = getModule(['getChannel'], false);
 const { actionIcon } = getModule(['actionIcon'], false);
 const { getMember } = getModule(['getMember'], false);
 const FetchUtil = getModule(['fetchMessages'], false);
+const { getGuild } = getModule(['getGuild'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
 const Menu = getModule(['MenuItem'], false);
@@ -76,8 +77,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       this.patch('shc-router', Route, 'default', (args, res) => {
          let id = res.props?.computedMatch?.params?.channelId;
-         if (id && this.isChannelHidden(id)) {
-            res.props.render = () => <LockedScreen channel={getChannel(id)} />;
+         let guild = res.props?.computedMatch?.params?.guildId;
+         if (id && guild && this.isChannelHidden(id)) {
+            res.props.render = () => <LockedScreen channel={getChannel(id)} guild={getGuild(guild)} />;
          };
 
          return res;

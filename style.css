@@ -39,3 +39,39 @@
 .shc-guild-name {
    margin-top: 8px;
 }
+
+.shc-locked-notice {
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+   margin: auto;
+   text-align: center;
+}
+
+.shc-additional-info-text {
+   margin-top: 10px;
+}
+
+.shc-locked-notice div[class^="divider"] {
+   display: none
+}
+
+.shc-locked-notice div[class^="topic"] {
+   background-color: var(--background-secondary);
+   padding: 5px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 50%;
+   border-radius: 5px;
+   margin: 10px auto;
+}
+
+.shc-notice-lock {
+   max-height: 128px;
+}
+
+.shc-locked-channel-text {
+   margin-top: 20px;
+}
