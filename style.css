@@ -74,4 +74,9 @@
 
 .shc-locked-channel-text {
    margin-top: 20px;
+   font-weight: bold;
+}
+
+.shc-no-access-text {
+   margin-top: 10px;
 }
