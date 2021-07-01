@@ -17,11 +17,6 @@ const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', fals
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
-const { getChannelId } = getModule(['getLastSelectedChannelId'], false);
-const { toolbar: Toolbar } = getModule(['toolbar', 'selected'], false);
-const { messagesErrorBar } = getModule(['messagesErrorBar'], false);
-const userClasses = getModule(['avatar', 'usernameContainer'], false);
-const { messagesWrapper } = getModule(['messagesWrapper'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
@@ -36,11 +31,10 @@ const FetchUtil = getModule(['fetchMessages'], false);
 const { iconItem } = getModule(['iconItem'], false);
 const UnreadStore = getModule(['hasUnread'], false);
 const Menu = getModule(['MenuItem'], false);
-const Text = getModule(['h5'], false);
-const Flex = getModule(['flex'], false);
 
-const Settings = require('./components/Settings');
-const LockIcon = require('./components/Lock');
+const LockedScreen = require('./components/misc/LockedScreen');
+const Settings = require('./components/settings/Settings');
+const LockIcon = require('./components/icons/Lock');
 
 const types = {
    GUILD_TEXT: 'SELECTABLE',
@@ -82,7 +76,9 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       this.patch('shc-router', Route, 'default', (args, res) => {
          let id = res.props?.computedMatch?.params?.channelId;
-         if (id && this.isChannelHidden(id)) this.displayChannelNotice();
+         if (id && this.isChannelHidden(id)) {
+            res.props.render = () => <LockedScreen channel={getChannel(id)} />;
+         };
 
          return res;
       });
@@ -255,11 +251,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       GuildContextMenu.default.displayName = 'GuildContextMenu';
 
       this.forceUpdateAll();
-
-      await waitFor(`.${userClasses.container}`);
-      if (this.isChannelHidden(getChannelId())) {
-         setTimeout(this.displayChannelNotice);
-      }
    }
 
    pluginWillUnload() {
@@ -267,47 +258,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
       this.forceUpdateAll();
-   }
-
-   async displayChannelNotice() {
-      await waitFor(`.${messagesWrapper}`);
-      const wrapper = document.querySelector(`.${messagesWrapper}`);
-      if (!wrapper || wrapper.firstChild.style.display == 'none') return;
-
-      if (wrapper.firstChild) {
-         wrapper.firstChild.style.display = 'none';
-      }
-
-      if (wrapper.parentElement?.children[1]) {
-         wrapper.parentElement.children[1].style.display = 'none';
-      }
-
-      if (wrapper.parentElement?.parentElement?.children[1]) {
-         wrapper.parentElement.parentElement.children[1].style.display = 'none';
-      }
-
-      const toolbar = document.querySelector(`.${Toolbar}`);
-
-      toolbar.style.display = 'none';
-
-      const notification = document.createElement('div');
-
-      notification.className = Flex.flexCenter;
-      notification.style.width = '100%';
-      notification.style.textAlign = 'center';
-
-      notification.innerHTML = `
-        <div class="${Flex.flex} ${Flex.directionColumn} ${Flex.alignCenter}">
-         <img style="max-height: 128px;" src="/assets/755d4654e19c105c3cd108610b78d01c.svg"></img><br /><br />
-         <h2 class="${Text.h2} ${Text.defaultColor}">This is a hidden channel.</h2>
-         <h5 class="${Text.h5} ${Text.defaultColor}">You cannot see the contents of this channel. However, you may see its name and topic.</h5>
-        </div>
-      `;
-
-      wrapper.appendChild(notification);
-
-      const errorBar = document.querySelector(`.${messagesErrorBar.split(' ')[0]}`);
-      if (errorBar) errorBar.style.display = 'none';
    }
 
    processContextMenu(res, guild) {
