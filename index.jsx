@@ -68,7 +68,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       });
 
       Channel.prototype.isHidden = function () {
-         return !Permissions.can({ data: 1024n }, this);
+         return ![1, 3].includes(this.type) && !Permissions.can({ data: 1024n }, this);
       };
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
@@ -92,10 +92,12 @@ module.exports = class ShowHiddenChannels extends Plugin {
       Route.default.displayName = 'RouteWithImpression';
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
-      FetchUtil.fetchMessages = ((args) => {
-         if (getChannel(args.channelId).isHidden()) return;
+      FetchUtil.fetchMessages = (args) => {
+         let channel = getChannel(args.channelId);
+         console.log(channel.type, channel.name, channel.recipients)
+         if (channel.isHidden()) return;
          return FetchUtil._fetchMessages(args);
-      }).bind(this);
+      }
 
       this.patch('shc-is-collapsed', CategoryStore, 'isCollapsed', (args, res) => {
          if (args[0]?.endsWith('hidden')) {
