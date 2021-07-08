@@ -67,19 +67,24 @@ module.exports = class ShowHiddenChannels extends Plugin {
          render: (props) => <Settings {...Object.assign(props, { update: this.forceUpdateAll.bind(this) })} />
       });
 
+      Channel.prototype.isHidden = function () {
+         return !Permissions.can({ data: 1024n }, this);
+      };
+
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
-         return res && !this.isChannelHidden(args[0]);
+         return res && !getChannel(args[0]).isHidden();
       });
 
       this.patch('shc-mention-count', UnreadStore, 'getMentionCount', (args, res) => {
-         return this.isChannelHidden(args[0]) ? 0 : res;
+         return getChannel(args[0])?.isHidden() ? 0 : res;
       });
 
       this.patch('shc-router', Route, 'default', (args, res) => {
          let id = res.props?.computedMatch?.params?.channelId;
          let guild = res.props?.computedMatch?.params?.guildId;
-         if (id && guild && this.isChannelHidden(id)) {
-            res.props.render = () => <LockedScreen channel={getChannel(id)} guild={getGuild(guild)} />;
+         let channel;
+         if (id && guild && (channel = getChannel(id)) && channel?.isHidden?.()) {
+            res.props.render = () => <LockedScreen channel={channel} guild={getGuild(guild)} />;
          };
 
          return res;
@@ -88,7 +93,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
       FetchUtil.fetchMessages = ((args) => {
-         if (this.isChannelHidden(args.channelId)) return;
+         if (getChannel(args.channelId).isHidden()) return;
          return FetchUtil._fetchMessages(args);
       }).bind(this);
 
@@ -160,7 +165,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
             for (let catId in props.categories) {
                if (catId != '_categories') {
                   let cat = props.categories[catId];
-                  cat = cat.filter(n => !this.isChannelHidden(n.channel.id));
+                  cat = cat.filter(n => !n.channel.isHidden());
                }
 
                for (let channelObj of props.categories[catId]) {
@@ -227,7 +232,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       this.patch('shc-channel-item', ChannelItem, 'default', (args, res) => {
          let instance = args[0];
-         if (instance.channel && this.isChannelHidden(instance.channel.id)) {
+         if (instance.channel?.isHidden()) {
             let item = res.props?.children?.props;
             if (item?.className) item.className += ` shc-hidden-channel shc-hidden-channel-type-${instance.channel.type}`;
 
@@ -256,6 +261,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
    }
 
    pluginWillUnload() {
+      delete Channel.prototype.isHidden;
       FetchUtil.fetchMessages = FetchUtil._fetchMessages;
       powercord.api.settings.unregisterSettings('show-hidden-channels');
       for (const patch of this.patches) uninject(patch);
@@ -345,11 +351,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       }
 
       return [this.cache[guild.id].hidden, this.cache[guild.id].amount];
-   }
-
-   isChannelHidden(channelId) {
-      let channel = getChannel(channelId);
-      return channel && this.cache[channel.guild_id]?.hidden[channel.type]?.find(c => c.id == channel.id);
    }
 
    forceUpdateAll() {
