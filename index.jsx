@@ -93,9 +93,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
       FetchUtil.fetchMessages = (args) => {
-         let channel = getChannel(args.channelId);
-         console.log(channel.type, channel.name, channel.recipients)
-         if (channel.isHidden()) return;
+         if (getChannel(args.channelId)?.isHidden?.()) return;
          return FetchUtil._fetchMessages(args);
       }
 
