@@ -69,6 +69,7 @@
 }
 
 .shc-notice-lock {
+   -webkit-user-drag: none;
    max-height: 128px;
 }
 

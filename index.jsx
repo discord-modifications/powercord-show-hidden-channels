@@ -95,7 +95,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       FetchUtil.fetchMessages = (args) => {
          if (getChannel(args.channelId)?.isHidden?.()) return;
          return FetchUtil._fetchMessages(args);
-      }
+      };
 
       this.patch('shc-is-collapsed', CategoryStore, 'isCollapsed', (args, res) => {
          if (args[0]?.endsWith('hidden')) {
