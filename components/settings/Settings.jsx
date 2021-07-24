@@ -60,7 +60,6 @@ module.exports = class Settings extends React.Component {
                         <SwitchItem
                            value={getSetting('channels', defaults)[type]}
                            onChange={() => {
-                              console.log('a');
                               settings[type] = !settings[type];
                               updateSetting('channels', settings);
                               this.props.update();
