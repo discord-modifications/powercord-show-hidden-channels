@@ -17,6 +17,7 @@ const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', fals
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const ChanneUtil = getModule(['getChannelIconComponent'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
@@ -89,6 +90,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
+      
       Route.default.displayName = 'RouteWithImpression';
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
@@ -228,6 +230,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
+
       NavigableChannels.default.displayName = 'NavigableChannels';
 
       this.patch('shc-channel-item', ChannelItem, 'default', (args, res) => {
@@ -248,6 +251,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
+
       ChannelItem.default.displayName = 'ChannelItem';
 
       this.patch('shc-context-menu', GuildContextMenu, 'default', ([{ guild }], res) => {
@@ -255,7 +259,14 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
+
       GuildContextMenu.default.displayName = 'GuildContextMenu';
+
+      this.patch('shc-channel-item-icon', ChanneUtil, 'getChannelIconComponent', (args, res) => {
+         if (args[0]?.isHidden?.()) args[2].locked = false;
+
+         return args;
+      }, true);
 
       this.forceUpdateAll();
    }
@@ -279,7 +290,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
             menuItems.splice(index + 1, 0,
                <Menu.MenuCheckboxItem
                   id='hide-locked-channels'
-                  label='Hide Locked Channels'
+                  label='Hide locked channels'
                   checked={checked}
                   action={() => {
                      setChecked(!checked);
