@@ -17,6 +17,7 @@ const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', fals
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipButton'], false);
 const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const ChannelClasses = getModule(['wrapper', 'mainContent'], false);
 const ChanneUtil = getModule(['getChannelIconComponent'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
@@ -90,7 +91,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
          return res;
       });
-      
+
       Route.default.displayName = 'RouteWithImpression';
 
       FetchUtil._fetchMessages = FetchUtil.fetchMessages;
@@ -247,6 +248,22 @@ module.exports = class ShowHiddenChannels extends Plugin {
                   </Clickable>
                </Tooltip>
             ];
+
+            if (instance.channel.type == ChannelTypes.GUILD_VOICE && !instance.connected) {
+               let wrapper = findInReactTree(res, n => n.props?.className?.includes(ChannelClasses.wrapper));
+
+               if (wrapper) {
+                  wrapper.props.onMouseDown = () => { };
+                  wrapper.props.onMouseUp = () => { };
+               }
+
+               let mainContent = findInReactTree(res, n => n.props?.className?.includes(ChannelClasses.mainContent));
+
+               if (mainContent) {
+                  mainContent.props.onClick = () => { };
+                  mainContent.props.href = null;
+               }
+            };
          }
 
          return res;
