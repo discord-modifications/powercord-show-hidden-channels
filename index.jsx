@@ -280,7 +280,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       GuildContextMenu.default.displayName = 'GuildContextMenu';
 
       this.patch('shc-channel-item-icon', ChanneUtil, 'getChannelIconComponent', (args, res) => {
-         if (args[0]?.isHidden?.()) args[2].locked = false;
+         if (args[0]?.isHidden?.() && args[2]?.locked) args[2].locked = false;
 
          return args;
       }, true);
