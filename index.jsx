@@ -70,7 +70,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       });
 
       Channel.prototype.isHidden = function () {
-         return ![1, 3].includes(this.type) && !Permissions.can({ data: 1024n }, this);
+         return ![1, 3].includes(this.type) && !Permissions.can(DiscordPermissions.VIEW_CHANNEL, this);
       };
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
