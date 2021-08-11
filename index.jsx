@@ -1,6 +1,6 @@
 const { inject, uninject } = require('powercord/injector');
 const { findInReactTree, getOwnerInstance, waitFor } = require('powercord/util');
-const { Tooltip } = require('powercord/components');
+const { Tooltip, Icon } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
    getModuleByDisplayName,
@@ -37,7 +37,6 @@ const Menu = getModule(['MenuItem'], false);
 
 const LockedScreen = require('./components/misc/LockedScreen');
 const Settings = require('./components/settings/Settings');
-const LockIcon = require('./components/icons/Lock');
 
 const types = {
    GUILD_TEXT: 'SELECTABLE',
@@ -244,7 +243,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
             if (children.props?.children) children.props.children = [
                <Tooltip text={Messages.CHANNEL_LOCKED_SHORT}>
                   <Clickable className={iconItem} style={{ display: 'block' }}>
-                     <LockIcon className={actionIcon} />
+                     <Icon name='LockClosed' className={actionIcon} />
                   </Clickable>
                </Tooltip>
             ];
