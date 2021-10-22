@@ -16,10 +16,10 @@ const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', fa
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipWrapper'], false);
+const { getNullableCurrentUser } = getModule(['getNullableCurrentUser'], false);
 const DiscordPermissions = getModule(['API_HOST'], false).Permissions;
 const ChannelClasses = getModule(['wrapper', 'mainContent'], false);
 const ChanneUtil = getModule(['getChannelIconComponent'], false);
-const { getCurrentUser } = getModule(['getCurrentUser'], false);
 const Permissions = getModule(['getChannelPermissions'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
@@ -338,7 +338,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       if (!guild) return [{}, 0];
       let channels = {};
 
-      let roles = (getMember(guild.id, getCurrentUser().id) || { roles: [] }).roles.length;
+      let roles = (getMember(guild.id, getNullableCurrentUser().id) || { roles: [] }).roles.length;
       let visible = (getChannels(guild.id) || { count: 0 });
 
       if (
