@@ -11,6 +11,10 @@
    max-height: 500px;
 }
 
+.shc-lock-icon-clickable {
+   margin-left: 0;
+}
+
 .shc-guild-item {
    padding: 6px;
    padding-left: 18px;

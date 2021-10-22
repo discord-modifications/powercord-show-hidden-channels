@@ -16,18 +16,18 @@ const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', fa
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipWrapper'], false);
-const DiscordPermissions = getModule(['Permissions'], false).Permissions;
+const DiscordPermissions = getModule(['API_HOST'], false).Permissions;
 const ChannelClasses = getModule(['wrapper', 'mainContent'], false);
 const ChanneUtil = getModule(['getChannelIconComponent'], false);
 const { getCurrentUser } = getModule(['getCurrentUser'], false);
+const Permissions = getModule(['getChannelPermissions'], false);
 const Channel = getModule(m => m.prototype?.isManaged, false);
 const Clickable = getModuleByDisplayName('Clickable', false);
 const CategoryUtil = getModule(['categoryCollapse'], false);
 const { getChannels } = getModule(['getChannels'], false);
-const Permissions = getModule(['getHighestRole'], false);
 const CategoryStore = getModule(['isCollapsed'], false);
-const { getChannel } = getModule(['getChannel'], false);
-const { actionIcon } = getModule(['actionIcon'], false);
+const { getChannel } = getModule(['hasChannel'], false);
+const { actionIcon } = getModule(['userLimit'], false);
 const { getMember } = getModule(['getMember'], false);
 const FetchUtil = getModule(['fetchMessages'], false);
 const { getGuild } = getModule(['getGuild'], false);
@@ -242,7 +242,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
             let children = res.props?.children?.props?.children[1]?.props?.children[1];
             if (children.props?.children) children.props.children = [
                <Tooltip text={Messages.CHANNEL_LOCKED_SHORT}>
-                  <Clickable className={iconItem} style={{ display: 'block' }}>
+                  <Clickable className={[iconItem, 'shc-lock-icon-clickable'].join(' ')} style={{ display: 'block' }}>
                      <Icon name='LockClosed' className={actionIcon} />
                   </Clickable>
                </Tooltip>
