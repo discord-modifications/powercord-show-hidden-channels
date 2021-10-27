@@ -64,10 +64,8 @@
 .shc-locked-notice div[class^="topic"] {
    background-color: var(--background-secondary);
    padding: 5px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   width: auto;
+   width: 50vh;
+   text-overflow: ellipsis;
    border-radius: 5px;
    margin: 10px auto;
 }
