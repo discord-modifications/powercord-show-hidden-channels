@@ -16,7 +16,7 @@ const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', fa
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
 const { container } = getModule(['container', 'subscribeTooltipWrapper'], false);
-const { getCurrentUser } = getModule(['getNullableCurrentUser'], false);
+const { getCurrentUser } = getModule(['getCurrentUser', 'getUser'], false);
 const DiscordPermissions = getModule(['API_HOST'], false).Permissions;
 const ChannelClasses = getModule(['wrapper', 'mainContent'], false);
 const ChanneUtil = getModule(['getChannelIconComponent'], false);
