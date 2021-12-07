@@ -39,7 +39,7 @@ const [
    { getGuild },
    { iconItem },
    UnreadStore
-] = test = bulk(
+] = bulk(
    m => m.default?.displayName == 'RouteWithImpression',
    m => m.default?.displayName == 'ChannelItem',
    ['wrapper', 'mainContent'],
