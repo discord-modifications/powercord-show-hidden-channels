@@ -61,9 +61,6 @@ const LockedScreen = require('./components/LockedScreen');
 module.exports = class ShowHiddenChannels extends Plugin {
    async startPlugin() {
       this.patches = [];
-      this.cache = {};
-      this.collapsed = [];
-      this.lastGuild = null;
       this.can = Permissions.__powercordOriginal_can ?? Permissions.can;
 
       this.loadStylesheet('style.css');
