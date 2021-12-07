@@ -38,7 +38,8 @@ const [
    FetchUtil,
    { getGuild },
    { iconItem },
-   UnreadStore
+   UnreadStore,
+   Voice
 ] = bulk(
    m => m.default?.displayName == 'RouteWithImpression',
    m => m.default?.displayName == 'ChannelItem',
@@ -51,7 +52,8 @@ const [
    ['receiveMessage'],
    ['getGuild'],
    ['iconItem'],
-   ['hasAcked']
+   ['hasAcked'],
+   ['getVoiceStateStats']
 );
 
 const LockedScreen = require('./components/LockedScreen');
@@ -72,8 +74,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
       };
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
-         console.log(getChannel(args[0]));
-         console.log(!getChannel(args[0]).isHidden());
          return res && !getChannel(args[0]).isHidden();
       });
 
@@ -92,7 +92,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
          const guild = res.props?.computedMatch?.params?.guildId;
 
          let channel;
-         if (id && guild && (channel = getChannel(id)) && channel?.isHidden?.()) {
+         if (id && guild && (channel = getChannel(id)) && channel?.isHidden?.() && channel?.id != Voice.getChannelId()) {
             res.props.render = () => <LockedScreen channel={channel} guild={getGuild(guild)} />;
          };
 
