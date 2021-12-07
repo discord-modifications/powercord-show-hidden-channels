@@ -17,7 +17,8 @@ const classes = {
    elevationBorderHigh: getModule(['elevationBorderHigh'], false).elevationBorderHigh,
    userText: getModule(['discriminator', 'avatar', 'scroller'], false).userText,
    scroller: getModule(['listWrapper', 'scroller', false]).scroller,
-   alignCenter: getModule(['alignCenter'], false).alignCenter
+   alignCenter: getModule(['alignCenter'], false).alignCenter,
+   popoutList: getModule(['popoutList'], false).popoutList
 };
 
 module.exports = class Settings extends React.Component {
@@ -39,8 +40,8 @@ module.exports = class Settings extends React.Component {
 
       return (
          <div>
-            <PopoutList
-               className={`shc-guild-settings ${classes.auditLogsFilter} ${classes.elevationBorderHigh}`}
+            <div
+               className={`shc-guild-settings ${classes.popoutList} ${classes.auditLogsFilter} ${classes.elevationBorderHigh}`}
                popoutKey='shc-guilds'
             >
                <PopoutListSearchBar
@@ -88,7 +89,7 @@ module.exports = class Settings extends React.Component {
                      )
                   }
                </AdvancedScrollerThin>
-            </PopoutList>
+            </div>
          </div>
       );
    }
