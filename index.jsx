@@ -1,5 +1,5 @@
 const { inject, uninject } = require('powercord/injector');
-const { findInReactTree, getOwnerInstance, waitFor } = require('powercord/util');
+const { findInReactTree, getOwnerInstance } = require('powercord/util');
 const { Tooltip, Icon } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
@@ -7,11 +7,11 @@ const {
    constants: { ChannelTypes },
    getModule,
    i18n: { Messages },
-   React
+   React,
+   contextMenu
 } = require('powercord/webpack');
 
 const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
-const GuildContextMenu = getModule(m => m.default?.displayName === 'GuildContextMenu', false);
 const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', false);
 const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
 const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
@@ -55,6 +55,7 @@ const defaults = {
 
 module.exports = class ShowHiddenChannels extends Plugin {
    async startPlugin() {
+      this.promises = { cancelled: false };
       this.patches = [];
       this.cache = {};
       this.collapsed = [];
@@ -67,6 +68,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
          label: 'Show Hidden Channels',
          render: (props) => <Settings {...Object.assign(props, { update: this.forceUpdateAll.bind(this) })} />
       });
+
+      this.patchContextMenu();
 
       Channel.prototype.isHidden = function () {
          return ![1, 3].includes(this.type) && !Permissions.can(DiscordPermissions.VIEW_CHANNEL, this);
@@ -137,7 +140,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       }, true);
 
       this.patch('shc-navigable-channels', NavigableChannels, 'default', (args, res) => {
-         let props = res.props?.children?.props;
+         let props = res.props?.children?.props?.children?.props;
          if (!props) return res;
 
          let { guild } = props;
@@ -270,14 +273,6 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       ChannelItem.default.displayName = 'ChannelItem';
 
-      this.patch('shc-context-menu', GuildContextMenu, 'default', ([{ guild }], res) => {
-         this.processContextMenu(res, guild);
-
-         return res;
-      });
-
-      GuildContextMenu.default.displayName = 'GuildContextMenu';
-
       this.patch('shc-channel-item-icon', ChanneUtil, 'getChannelIconComponent', (args, res) => {
          if (args[0]?.isHidden?.() && args[2]?.locked) args[2].locked = false;
 
@@ -287,7 +282,53 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.forceUpdateAll();
    }
 
+   async patchContextMenu() {
+      const GuildContextMenu = await this.getLazyContextMenuModule('GuildContextMenu');
+      if (this.promises.cancelled) return;
+
+      this.patch('shc-context-menu', GuildContextMenu, 'default', ([{ guild }], res) => {
+         this.processContextMenu(res, guild);
+
+         return res;
+      });
+
+      GuildContextMenu.default.displayName = 'GuildContextMenu';
+   }
+
+   getLazyContextMenuModule(displayName) {
+      return new Promise(resolve => {
+         const result = getModule(m => m.default?.displayName === displayName, false);
+         if (result) {
+            resolve(result);
+         } else {
+            const injectionId = `lazy-context-menu-search-${displayName}`;
+            this.patch(injectionId, contextMenu, 'openContextMenuLazy', ([eventHandler, renderLazy, options]) => {
+               const patchedRenderLazy = async (...args) => {
+                  const component = await renderLazy(...args);
+
+                  try {
+                     const result = component();
+                     const match = result.type.displayName === displayName;
+
+                     if (match) {
+                        resolve(getModule(m => m.default === result.type, false));
+                        uninject(injectionId);
+                     }
+                  } catch (e) {
+                     this.log(`Unable to resolve the module for '${displayName}'!`, e);
+                  }
+
+                  return component;
+               };
+
+               return [eventHandler, patchedRenderLazy, options];
+            }, true);
+         }
+      });
+   }
+
    pluginWillUnload() {
+      this.promises.cancelled = true;
       delete Channel.prototype.isHidden;
       FetchUtil.fetchMessages = FetchUtil._fetchMessages;
       powercord.api.settings.unregisterSettings('show-hidden-channels');

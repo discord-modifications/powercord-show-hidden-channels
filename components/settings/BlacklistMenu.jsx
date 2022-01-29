@@ -12,7 +12,6 @@ const SelectableItem = PopoutList.prototype.constructor.Item;
 const FlexChild = Flex.prototype.constructor.Child;
 
 const classes = {
-   auditLogsFilter: getModule(['guildSettingsAuditLogsUserFilterPopout'], false).guildSettingsAuditLogsUserFilterPopout,
    discriminator: getModule(['discriminator', 'avatar', 'scroller'], false).discriminator,
    elevationBorderHigh: getModule(['elevationBorderHigh'], false).elevationBorderHigh,
    userText: getModule(['discriminator', 'avatar', 'scroller'], false).userText,
@@ -41,7 +40,7 @@ module.exports = class Settings extends React.Component {
       return (
          <div>
             <div
-               className={`shc-guild-settings ${classes.popoutList} ${classes.auditLogsFilter} ${classes.elevationBorderHigh}`}
+               className={`shc-guild-settings ${classes.popoutList} ${classes.elevationBorderHigh}`}
                popoutKey='shc-guilds'
             >
                <PopoutListSearchBar
