@@ -14,7 +14,13 @@
 
 ---
 
-### Features
+### "Performance" branch features
+- Shows hidden channels in servers.
+- A splash screen indicating you cannot see that channel with the channel topic under it if it exists
+- The ability to see people live as they join & leave in hidden voice channels
+- Lock indicator to distinguish a locked channel from a normal one
+
+### "Features" branch features
 
 - Shows hidden channels in servers.
 - A splash screen indicating you cannot see that channel with the channel topic under it if it exists
