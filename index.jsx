@@ -16,6 +16,7 @@ const {
 
 function bulk(...filters) {
    const out = new Array(filters.length);
+
    filters = filters.map(filter => {
       if (Array.isArray(filter)) {
          return (mdl) => mdl && filter.every(key => mdl[key] != void 0);
