@@ -1,39 +1,89 @@
 const { inject, uninject } = require('powercord/injector');
 const { findInReactTree, getOwnerInstance } = require('powercord/util');
-const { Tooltip, Icon } = require('powercord/components');
+const { Tooltip, Icon, Menu, Clickable } = require('powercord/components');
 const { Plugin } = require('powercord/entities');
 const {
-   getModuleByDisplayName,
-   constants: { ChannelTypes },
    getModule,
+   constants: {
+      ChannelTypes,
+      Permissions: DiscordPermissions
+   },
+   getAllModules,
    i18n: { Messages },
    React,
    contextMenu
 } = require('powercord/webpack');
 
-const NavigableChannels = getModule(m => m.default?.displayName == 'NavigableChannels', false);
-const Route = getModule(m => m.default?.displayName == 'RouteWithImpression', false);
-const ChannelItem = getModule(m => m.default?.displayName == 'ChannelItem', false);
-const { getMutableGuildChannels } = getModule(['getMutableGuildChannels'], false);
-const { container } = getModule(['container', 'subscribeTooltipWrapper'], false);
-const { getCurrentUser } = getModule(['getCurrentUser', 'getUser'], false);
-const DiscordPermissions = getModule(['API_HOST'], false).Permissions;
-const ChannelClasses = getModule(['wrapper', 'mainContent'], false);
-const ChanneUtil = getModule(['getChannelIconComponent'], false);
-const Permissions = getModule(['getChannelPermissions'], false);
-const Channel = getModule(m => m.prototype?.isManaged, false);
-const Clickable = getModuleByDisplayName('Clickable', false);
-const CategoryUtil = getModule(['categoryCollapse'], false);
-const { getChannels } = getModule(['getChannels'], false);
-const CategoryStore = getModule(['isCollapsed'], false);
-const { getChannel } = getModule(['hasChannel'], false);
-const { actionIcon } = getModule(['userLimit'], false);
-const FetchUtil = getModule(['receiveMessage'], false);
-const { getMember } = getModule(['getMember'], false);
-const { getGuild } = getModule(['getGuild'], false);
-const { iconItem } = getModule(['iconItem'], false);
-const UnreadStore = getModule(['hasUnread'], false);
-const Menu = getModule(['MenuItem'], false);
+function bulk(...filters) {
+   const out = new Array(filters.length);
+   filters = filters.map(filter => {
+      if (Array.isArray(filter)) {
+         return (mdl) => mdl && filter.every(key => mdl[key] != void 0);
+      }
+
+      if (typeof filter === "string") {
+         return (mdl) => mdl?.default?.displayName === filter;
+      }
+
+      return filter;
+   });
+
+   getAllModules(module => {
+      for (const [index, filter] of filters.entries()) {
+         if (filter(module)) {
+            out[index] = module;
+         }
+      }
+
+      return out.filter(e => e).length === filters.length;
+   }, false);
+
+   return out;
+}
+
+const [
+   NavigableChannels,
+   Route,
+   ChannelItem,
+   { getMutableGuildChannels } = {},
+   { container } = {},
+   { getCurrentUser } = {},
+   ChannelClasses,
+   ChannelUtil,
+   Permissions,
+   Channel,
+   CategoryUtil,
+   { getChannels } = {},
+   CategoryStore,
+   { getChannel } = {},
+   { actionIcon } = {},
+   FetchUtil,
+   { getMember } = {},
+   { getGuild } = {},
+   { iconItem } = {},
+   UnreadStore
+] = bulk(
+   'NavigableChannels',
+   'RouteWithImpression',
+   'ChannelItem',
+   ['getMutableGuildChannels'],
+   ['container', 'hubContainer'],
+   ['getCurrentUser', 'getUser'],
+   ['wrapper', 'mainContent'],
+   ['getChannelIconComponent'],
+   ['getChannelPermissions'],
+   m => m.prototype?.isManaged,
+   ['categoryCollapse'],
+   ['getChannels'],
+   ['isCollapsed'],
+   ['hasChannel'],
+   ['userLimit'],
+   ['receiveMessage'],
+   ['getMember'],
+   ['getGuild'],
+   ['iconItem'],
+   ['hasAcked']
+);
 
 const LockedScreen = require('./components/misc/LockedScreen');
 const Settings = require('./components/settings/Settings');
@@ -273,7 +323,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       ChannelItem.default.displayName = 'ChannelItem';
 
-      this.patch('shc-channel-item-icon', ChanneUtil, 'getChannelIconComponent', (args, res) => {
+      this.patch('shc-channel-item-icon', ChannelUtil, 'getChannelIconComponent', (args, res) => {
          if (args[0]?.isHidden?.() && args[2]?.locked) args[2].locked = false;
 
          return args;
