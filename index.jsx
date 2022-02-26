@@ -33,11 +33,10 @@ const [
    ChannelUtil,
    Permissions,
    Channel,
-   { getChannel },
-   { actionIcon },
+   { getChannel } = {},
    FetchUtil,
-   { getGuild },
-   { iconItem },
+   { getGuild } = {},
+   { iconItem, actionIcon } = {},
    UnreadStore,
    Voice
 ] = bulk(
@@ -48,7 +47,6 @@ const [
    ['getChannelPermissions'],
    m => m.prototype?.isManaged,
    ['hasChannel'],
-   ['userLimit'],
    ['receiveMessage'],
    ['getGuild'],
    ['iconItem'],
