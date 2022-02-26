@@ -57,11 +57,10 @@ const [
    { getChannels } = {},
    CategoryStore,
    { getChannel } = {},
-   { actionIcon } = {},
    FetchUtil,
    { getMember } = {},
    { getGuild } = {},
-   { iconItem } = {},
+   { iconItem, actionIcon } = {},
    UnreadStore
 ] = bulk(
    'NavigableChannels',
@@ -78,7 +77,6 @@ const [
    ['getChannels'],
    ['isCollapsed'],
    ['hasChannel'],
-   ['userLimit'],
    ['receiveMessage'],
    ['getMember'],
    ['getGuild'],

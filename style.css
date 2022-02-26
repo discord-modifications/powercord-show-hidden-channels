@@ -57,11 +57,11 @@
    margin-top: 10px;
 }
 
-.shc-locked-notice div[class^="divider"] {
+.shc-locked-notice > div[class^="divider"] {
    display: none
 }
 
-.shc-locked-notice div[class^="topic"] {
+.shc-locked-notice > div[class^="topic"] {
    background-color: var(--background-secondary);
    padding: 5px;
    max-width: 50vh;
