@@ -125,7 +125,8 @@ module.exports = class ShowHiddenChannels extends Plugin {
       };
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
-         return res && !getChannel(args[0]).isHidden();
+         var channel = getChannel(args[0]);
+         return res && channel !== undefined && !channel.isHidden();
       });
 
       this.patch('shc-mention-count', UnreadStore, 'getMentionCount', (args, res) => {
