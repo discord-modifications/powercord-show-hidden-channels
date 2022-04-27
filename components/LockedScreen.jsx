@@ -22,15 +22,14 @@ module.exports = React.memo((props) => {
             color={Text.Colors.HEADER_SECONDARY}
             size={Text.Sizes.SIZE_16}
          >
-            You cannot see the contents of this channel. {props.channel.topic ? 'However, you may see its topic.' : ''} 
+            You cannot see the contents of this channel. {props.channel.topic && 'However, you may see its topic.'}
          </Text>
-         {props.channel.topic ? (<>
+         {props.channel.topic &&
             <ChannelTopic
                key={props.channel.id}
                channel={props.channel}
                guild={props.guild}
-            />
-         </>) : ''}
+         />}
       </div>
    </div>;
 });
