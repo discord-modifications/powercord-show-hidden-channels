@@ -4,6 +4,23 @@ const { Text } = require('powercord/components');
 const { chat } = getModule(['chat', 'chatContent'], false);
 
 module.exports = React.memo((props) => {
+
+   function getDateFromSnowflake(number) {
+      try {
+         const id = parseInt(number);
+         const binary = id.toString(2).padStart(64, '0');
+
+         const excerpt = binary.substring(0, 42);
+         const decimal = parseInt(excerpt, 2);
+         const unix = decimal + 1420070400000;
+
+         return new Date(unix).toLocaleString();
+      } catch (e) {
+         console.error(e);
+         return 'Failed to get date';
+      }
+   }
+
    return <div className={['shc-locked-chat-content', chat].filter(Boolean).join(' ')}>
       <div className="shc-locked-notice" >
          <img
@@ -17,6 +34,11 @@ module.exports = React.memo((props) => {
          >
             This is a hidden channel.
          </Text>
+         {props.channel.lastMessageId &&
+            <Text>
+               Last message sent: {getDateFromSnowflake(props.channel.lastMessageId)}
+            </Text>
+         }
          <Text
             className="shc-no-access-text"
             color={Text.Colors.HEADER_SECONDARY}
