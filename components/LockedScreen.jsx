@@ -35,7 +35,10 @@ module.exports = React.memo((props) => {
             This is a hidden channel.
          </Text>
          {props.channel.lastMessageId &&
-            <Text>
+            <Text
+                color={Text.Colors.INTERACTIVE_NORMAL}
+                size={Text.Sizes.SIZE_14}
+            >
                Last message sent: {getDateFromSnowflake(props.channel.lastMessageId)}
             </Text>
          }
