@@ -69,7 +69,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
       };
 
       this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
-         return res && !getChannel(args[0]).isHidden();
+         return res && !getChannel(args[0])?.isHidden();
       });
 
       this.patch('shc-permissions-can', Permissions, 'can', (args, res) => {
