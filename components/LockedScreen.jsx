@@ -1,7 +1,7 @@
 const { React, getModule, getModuleByDisplayName } = require('powercord/webpack');
 const ChannelTopic = getModuleByDisplayName('ChannelTopic', false);
-const { Text } = require('powercord/components');
 const { chat } = getModule(['chat', 'chatContent'], false);
+const Text = getModuleByDisplayName('LegacyText', false);
 
 module.exports = React.memo((props) => {
    return <div className={['shc-locked-chat-content', chat].filter(Boolean).join(' ')}>
