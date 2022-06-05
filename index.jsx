@@ -1,4 +1,4 @@
-const { getAllModules, constants, getModule, i18n: { Messages }, React } = require('powercord/webpack');
+const { getAllModules, constants, messages, i18n: { Messages }, React } = require('powercord/webpack');
 const { Clickable, Tooltip, Icon } = require('powercord/components');
 const { ChannelTypes, Permissions: DiscordPermissions } = constants;
 const { inject, uninject } = require('powercord/injector');
@@ -34,7 +34,6 @@ const [
    Permissions,
    Channel,
    { getChannel } = {},
-   FetchUtil,
    { getGuild } = {},
    { iconItem, actionIcon } = {},
    UnreadStore,
@@ -46,11 +45,10 @@ const [
    ['getChannelIconComponent'],
    ['getChannelPermissions'],
    m => m.prototype?.isManaged,
-   ['hasChannel'],
-   ['receiveMessage'],
+   ['getDMFromUserId'],
    ['getGuild'],
    ['iconItem'],
-   ['hasAcked'],
+   ['isForumPostUnread'],
    ['getVoiceStateStats']
 );
 
@@ -68,8 +66,16 @@ module.exports = class ShowHiddenChannels extends Plugin {
          return ![1, 3].includes(this.type) && !_this.can(DiscordPermissions.VIEW_CHANNEL, this);
       };
 
-      this.patch('shc-unread', UnreadStore, 'hasUnread', (args, res) => {
+      this.patch('shc-unread', UnreadStore, 'hasAnyUnread', (args, res) => {
          return res && !getChannel(args[0])?.isHidden();
+      });
+
+      this.patch('shc-unread-pins', UnreadStore, 'hasUnread', (args, res) => {
+         return res && !getChannel(args[0])?.isHidden();
+      });
+
+      this.patch('shc-unread-relevant', UnreadStore, 'hasRelevantUnread', (args, res) => {
+         return res && !args[0].isHidden();
       });
 
       this.patch('shc-permissions-can', Permissions, 'can', (args, res) => {
@@ -96,10 +102,10 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
       Route.default.displayName = 'RouteWithImpression';
 
-      FetchUtil._fetchMessages = FetchUtil.fetchMessages;
-      FetchUtil.fetchMessages = (args) => {
+      messages._fetchMessages = messages.fetchMessages;
+      messages.fetchMessages = (args) => {
          if (getChannel(args.channelId)?.isHidden?.()) return;
-         return FetchUtil._fetchMessages(args);
+         return messages._fetchMessages(args);
       };
 
       this.patch('shc-channel-item', ChannelItem, 'default', (args, res) => {
@@ -148,7 +154,7 @@ module.exports = class ShowHiddenChannels extends Plugin {
 
    pluginWillUnload() {
       delete Channel.prototype.isHidden;
-      FetchUtil.fetchMessages = FetchUtil._fetchMessages;
+      messages.fetchMessages = messages._fetchMessages;
       for (const patch of this.patches) uninject(patch);
    }
 
