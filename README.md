@@ -32,5 +32,4 @@
 
 ### Previews
 
-![Image](https://media.wtf/36986107) <br />
-![Image](https://media.wtf/92949250) <br />
+![image](https://user-images.githubusercontent.com/98427312/182038484-325a5193-3bca-45dd-8091-3abe03f543b8.png)
