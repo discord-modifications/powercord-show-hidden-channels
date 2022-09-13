@@ -77,6 +77,10 @@ module.exports = class ShowHiddenChannels extends Plugin {
       this.patch('shc-unread-relevant', UnreadStore, 'hasRelevantUnread', (args, res) => {
          return res && !args[0].isHidden();
       });
+      
+      this.patch('shc-unread-notable', UnreadStore, 'hasNotableUnread', (args, res) => {
+         return res && !getChannel(args[0])?.isHidden();
+      });
 
       this.patch('shc-permissions-can', Permissions, 'can', (args, res) => {
          if (args[0] == DiscordPermissions.VIEW_CHANNEL) return true;
